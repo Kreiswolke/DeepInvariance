@@ -3,7 +3,7 @@ layer {
   name: "data"
   type: "Data"
   top: "data"
-  top: "label"
+ # top: "label"
   include {
     phase: TRAIN
   }
@@ -20,7 +20,7 @@ layer {
   name: "data"
   type: "Data"
   top: "data"
-  top: "label"
+#  top: "label"
   include {
     phase: TEST
     stage: "test-on-test"
@@ -36,18 +36,18 @@ layer {
 }
 
 
-layer {
-  name: "flatdata"
-  type: "Flatten"
-  bottom: "data"
-  top: "flatdata"
-}
+#layer {
+#  name: "flatdata"
+#  type: "Flatten"
+#  bottom: "data"
+#  top: "flatdata"
+#}
 ###### UNROTATED DATA ######
 layer {
   name: "data_unrot"
   type: "Data"
   top: "data_unrot"
-  top: "label_unrot"
+#  top: "label_unrot"
   include {
     phase: TRAIN
   }
@@ -65,7 +65,7 @@ layer {
   name: "data_unrot"
   type: "Data"
   top: "data_unrot"
-  top: "label_unrot"
+#  top: "label_unrot"
   include {
     phase: TEST
     stage: "test-on-test"
@@ -369,7 +369,7 @@ layer {
 layer {
   name: "loss"
   type: "SigmoidCrossEntropyLoss"
-  bottom: "decode1neuron"
+  bottom: "decode1"
   bottom: "flatdata_unrot"
   top: "cross_entropy_loss"
   loss_weight: 1
