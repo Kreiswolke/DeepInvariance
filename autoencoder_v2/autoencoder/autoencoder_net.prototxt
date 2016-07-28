@@ -360,20 +360,21 @@ layer {
 }
 
 layer {
-  name: "loss"
-  type: "SigmoidCrossEntropyLoss"
-  bottom: "decode1"
-  bottom: "flatdata_unrot"
-  top: "cross_entropy_loss"
-  loss_weight: 1
-}
-
-layer {
   name: "decode1neuron"
   type: "Sigmoid"
   bottom: "decode1"
   top: "decode1neuron"
 }
+
+layer {
+  name: "loss"
+  type: "SigmoidCrossEntropyLoss"
+  bottom: "decode1neuron"
+  bottom: "flatdata_unrot"
+  top: "cross_entropy_loss"
+  loss_weight: 1
+}
+
 
 layer {
   name: "loss"
