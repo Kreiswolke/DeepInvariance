@@ -11,7 +11,7 @@ display: 1000
 max_iter: 780000 
 weight_decay: 0.0005
 snapshot: 78000
-snapshot_prefix: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/autoencoder/snapshots/"
+snapshot_prefix: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/autoencoder/snapshots_28_07/"
 momentum: 0.9
 snapshot_after_train: true
 # solver mode: CPU or GPU
