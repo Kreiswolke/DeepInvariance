@@ -1,0 +1,255 @@
+name: "MNISTAutoencoder"
+
+########################### DATA LAYERS ##############################
+
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TRAIN_60000_rot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+    stage: "test-on-test"
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TEST_10000_rot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+
+
+#layer {
+#  name: "flatdata"
+#  type: "Flatten"
+#  bottom: "data"
+#  top: "flatdata"
+#}
+###### UNROTATED DATA ######
+layer {
+  name: "data_unrot"
+  type: "Data"
+  top: "data_unrot"
+  top: "label_unrot"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TRAIN_60000_unrot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+
+layer {
+  name: "data_unrot"
+  type: "Data"
+  top: "data_unrot"
+  top: "label_unrot"
+  include {
+    phase: TEST
+    stage: "test-on-test"
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TEST_10000_unrot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+
+
+layer {
+  name: "flatdata_unrot"
+  type: "Flatten"
+  bottom: "data_unrot"
+  top: "flatdata_unrot"
+}
+
+############################### DEEP LAYERS #############################
+
+layer {
+  name: "encode1"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "encode1"
+  param {
+    name: "weights1"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 784
+    transpose: false
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "encode1neuron"
+  type: "Sigmoid"
+  bottom: "encode1"
+  top: "encode1neuron"
+}
+layer {
+  name: "encode2"
+  type: "InnerProduct"
+  bottom: "encode1neuron"
+  top: "encode2"
+  param {
+    name: "weights2"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 784
+    transpose: false
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "encode2neuron"
+  type: "Sigmoid"
+  bottom: "encode2"
+  top: "encode2neuron"
+}
+layer {
+  name: "encode3"
+  type: "InnerProduct"
+  bottom: "encode2neuron"
+  top: "encode3"
+  param {
+    name: "weights3"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 784
+    transpose: false
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "encode3neuron"
+  type: "Sigmoid"
+  bottom: "encode3"
+  top: "encode3neuron"
+}
+layer {
+  name: "encode4"
+  type: "InnerProduct"
+  bottom: "encode3neuron"
+  top: "encode4"
+  param {
+    name: "weights4"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 784
+    transpose: false
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+layer {
+  name: "encode4neuron"
+  type: "Sigmoid"
+  bottom: "encode4"
+  top: "encode4neuron"
+}
+
+########################### MLP #########################
+
+layer {
+  name: "score"
+  type: "InnerProduct"
+  bottom: "encode4neuron"
+  top: "score"
+  inner_product_param {
+   num_output: 10
+    weight_filler {
+      type: "xavier"
+    }
+  }
+}
+
+layer {
+  name: "loss_labels"
+  type: "SoftmaxWithLoss"
+  bottom: "score"
+  bottom: "label"
+  top: "loss"
+}
