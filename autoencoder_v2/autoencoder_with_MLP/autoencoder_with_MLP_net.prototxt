@@ -1,4 +1,4 @@
-name: "MNISTAutoencoder"
+name: "MNISTAutoencoderMLP"
 
 ########################### DATA LAYERS ##############################
 
@@ -39,12 +39,6 @@ layer {
 }
 
 
-#layer {
-#  name: "flatdata"
-#  type: "Flatten"
-#  bottom: "data"
-#  top: "flatdata"
-#}
 ###### UNROTATED DATA ######
 layer {
   name: "data_unrot"
@@ -252,4 +246,18 @@ layer {
   bottom: "score"
   bottom: "label"
   top: "loss"
+  loss_weight: 1
+}
+
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "score"
+  bottom: "label"
+  top: "accuracy"
+  loss_weight: 0
+
+  include {
+    phase: TEST
+  }
 }

@@ -1,0 +1,18 @@
+net: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/autoencoder_with_MLP/autoencoder_with_MLP_net.prototxt"
+test_state: { stage: 'test-on-test' }
+test_iter: 130
+test_interval: 780
+test_compute_loss: true
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10000
+display: 1000
+max_iter: 780000 
+weight_decay: 0.0005
+snapshot: 78000
+snapshot_prefix: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/autoencoder_with_MLP/snapshots_with_MLP/"
+momentum: 0.9
+snapshot_after_train: true
+# solver mode: CPU or GPU
+solver_mode: GPU
