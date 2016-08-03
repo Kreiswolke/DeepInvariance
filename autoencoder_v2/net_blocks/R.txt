@@ -1,0 +1,42 @@
+layer { 
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TRAIN_60000_rot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+    stage: "test-on-test"
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "/mnt/antares_raid/home/oliver/Scripts/autoencoder_v2/MNIST_lmdb/MNIST_TEST_10000_rot_lmdb/shuffled/"
+    batch_size: 1000
+    backend: LMDB
+  }
+}
+
+layer {
+  name: "flatdata_rot"
+  type: "Flatten"
+  bottom: "data"
+  top: "flatdata_rot"
+}
