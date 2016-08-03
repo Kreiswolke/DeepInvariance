@@ -1,0 +1,33 @@
+layer {
+  name: "score"
+  type: "InnerProduct"
+  bottom: "encode4neuron"
+  top: "score"
+  inner_product_param {
+   num_output: 10
+    weight_filler {
+      type: "xavier"
+    }
+  }
+}
+
+#layer {
+#  name: "loss_labels"
+#  type: "SoftmaxWithLoss"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "loss"
+#  loss_weight: 1
+#}
+
+#layer {
+#  name: "accuracy"
+#  type: "Accuracy"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "accuracy"
+#  loss_weight: 0#
+#    include {
+#    phase: TEST
+#  }
+#}
