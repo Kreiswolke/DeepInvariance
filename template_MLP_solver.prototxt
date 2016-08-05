@@ -1,0 +1,17 @@
+net: network
+test_state: { stage: 'test-on-test' }
+test_iter: testiter
+test_interval: testinterval
+test_compute_loss: true
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10000
+display: 1000
+max_iter: 780000 
+weight_decay: 0.0005
+snapshot: 78000
+snapshot_prefix: snapshotprefix
+momentum: 0.9
+snapshot_after_train: true
+solver_mode: GPU
