@@ -11,7 +11,7 @@ layer {
     scale: 0.0039215684
   }
   data_param {
-    source: train_net
+    source: train_net_unrot
     batch_size: 1000
     backend: LMDB
   }
@@ -29,7 +29,7 @@ layer {
     scale: 0.0039215684
   }
   data_param {
-    source: test_net
+    source: test_net_unrot
     batch_size: 1000
     backend: LMDB
   }
