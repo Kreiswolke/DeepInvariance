@@ -182,6 +182,8 @@ class MNISTtransformer(object):
 
                                 txn_unrot_ang.put(str_id, datum_unrot.SerializeToString()) 
                                 count = count + 1
+                                if int(self.batch_size*self.n_angles*idx + count)%10000==0:
+                                        print('Image Nr. %i created from %s'%(int(self.batch_size*self.n_angles*idx + count),self.dir_str))
                     env_rot_ang.close()
                 env_unrot_ang.close()
             env_rot.close()

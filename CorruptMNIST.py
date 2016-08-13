@@ -147,10 +147,10 @@ class MNISTcorrupter(object):
             env_randint = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'randint_lmdb/', map_size=map_size)
             env_rot = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_lmdb/', map_size=map_size)
             env_rot_ang = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_ang_lmdb/',map_size=int(1e12))
-            env_unrot_ang = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'unrot_lmdb/',map_size=map_size)
+            env_unrot = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'unrot_lmdb/',map_size=map_size)
             with env_rot.begin(write=True) as txn:    
                 with env_randint.begin(write=True) as txn_randint:   
-                    with env_unrot_ang.begin(write=True) as txn_unrot_ang:
+                    with env_unrot.begin(write=True) as txn_unrot:
                         with env_rot_ang.begin(write=True) as txn_rot_ang:
                             # Looping over images from MNIST
                             for  in_, lab_ in zip(IMG[(int(self.batch_size*idx)):(int(self.batch_size*(idx+1)))], LABEL[int((self.batch_size*idx)):(int(self.batch_size*(idx+1)))]):
@@ -184,14 +184,14 @@ class MNISTcorrupter(object):
                                     #Storing unroted images
                                     datum_unrot = caffe.io.array_to_datum(np.reshape(im.squeeze(),[1,28,28]).astype(float), label)
 
-                                    txn_unrot_ang.put(str_id, datum_unrot.SerializeToString()) 
+                                    txn_unrot.put(str_id, datum_unrot.SerializeToString()) 
                                     # Storing corrupted randints
                                     txn_randint.put(str_id, str(randint)) 
                                     count = count + 1
                                     if int(self.batch_size*self.n_angles*idx + count)%10000==0:
                                         print('Image Nr. %i created from %s'%(int(self.batch_size*self.n_angles*idx + count),self.dir_str))
                         env_rot_ang.close()
-                    env_unrot_ang.close()
+                    env_unrot.close()
                 env_randint.close()
             env_rot.close()
 
