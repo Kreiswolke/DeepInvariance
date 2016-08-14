@@ -8,7 +8,7 @@ lr_policy: "step"
 gamma: 0.1
 stepsize: 10000
 display: 1000
-max_iter: 780000 
+max_iter: maxiter 
 weight_decay: 0.0005
 snapshot: 78000
 snapshot_prefix: snapshotprefix
