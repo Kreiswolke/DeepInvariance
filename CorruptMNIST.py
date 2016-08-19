@@ -122,7 +122,7 @@ class MNISTcorrupter(object):
         return I, Label
     
     
-    def run(self):
+    def run(self,*args):
         set_st = self.set_str + str(self.N_im) + '_corrupt_px_%i_'%self.N_pix_corrupt 
 
         #Create angles
@@ -148,49 +148,58 @@ class MNISTcorrupter(object):
             env_rot = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_lmdb/', map_size=map_size)
             env_rot_ang = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_ang_lmdb/',map_size=int(1e12))
             env_unrot = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'unrot_lmdb/',map_size=map_size)
+            env_unrot_corrupted = lmdb.open(self.dst_lmdb_dir + 'MNIST' + set_st + 'corrupted_unrot_lmdb/',map_size=map_size)
+
             with env_rot.begin(write=True) as txn:    
                 with env_randint.begin(write=True) as txn_randint:   
                     with env_unrot.begin(write=True) as txn_unrot:
-                        with env_rot_ang.begin(write=True) as txn_rot_ang:
-                            # Looping over images from MNIST
-                            for  in_, lab_ in zip(IMG[(int(self.batch_size*idx)):(int(self.batch_size*(idx+1)))], LABEL[int((self.batch_size*idx)):(int(self.batch_size*(idx+1)))]):
-                                im = in_
-                                label = lab_
-                                for angle in self.angles:
-                                    #Prepare data
-                                    X = self.rotate_image(im.squeeze(), angle)
-                                    randint, X = self.corrupt_image(X, self.N_pix_corrupt)
-                                    X = np.reshape(X,[1,28,28])
+                        with env_unrot_corrupted.begin(write=True) as txn_unrot_corrupted:
+                            with env_rot_ang.begin(write=True) as txn_rot_ang:
+                                # Looping over images from MNIST
+                                for  in_, lab_ in zip(IMG[(int(self.batch_size*idx)):(int(self.batch_size*(idx+1)))], LABEL[int((self.batch_size*idx)):(int(self.batch_size*(idx+1)))]):
+                                    im = in_
+                                    label = lab_
+                                    for angle in self.angles:
+                                        #Prepare data
+                                        X_rot = self.rotate_image(im.squeeze(), angle)
+                                        _,X_uncrot_uncorr = self.corrupt_image(im.squeeze(), self.N_pix_corrupt)
+                                        randint, X = self.corrupt_image(X_rot, self.N_pix_corrupt)
+                                        X = np.reshape(X,[1,28,28])
 
-                                    datum = caffe.io.array_to_datum(X.astype(float), label)
-                                   #  if in_idx ==1:
-                                   #     print(X.astype(float).shape)
-                                    #datum.channels = X.shape[0]
-                                    #datum.height = X.shape[1]
-                                    #datum.width = X.shape[2]
-                                    #datum.data = X.tostring()  # or .tostring() if numpy < 1.9
+                                        datum = caffe.io.array_to_datum(X.astype(float), label)
+                                        #  if in_idx ==1:
+                                        #     print(X.astype(float).shape)
+                                        #datum.channels = X.shape[0]
+                                        #datum.height = X.shape[1]
+                                        #datum.width = X.shape[2]
+                                        #datum.data = X.tostring()  # or .tostring() if numpy < 1.9
 
-                                    #datum.label = label
-                                    rot_angs[count] = str(angle) # "{0}".format(angle)
-                                    str_id = self.IDX_FMT.format(int(self.batch_size*self.n_angles*idx) + count)
-                                    #if count%100==0:
-                                    #    print(str_id)
-                                    #print(datum)
+                                        #datum.label = label
+                                        rot_angs[count] = str(angle) # "{0}".format(angle)
+                                        str_id = self.IDX_FMT.format(int(self.batch_size*self.n_angles*idx) + count)
+                                        #if count%100==0:
+                                        #    print(str_id)
+                                        #print(datum)
 
-                                    # The encode is only essential in Python 3
-                                    txn.put(str_id, datum.SerializeToString())
-                                    txn_rot_ang.put(str_id, str(angle) )
+                                        # The encode is only essential in Python 3
+                                        txn.put(str_id, datum.SerializeToString())
+                                        txn_rot_ang.put(str_id, str(angle) )
 
-                                    #Storing unroted images
-                                    datum_unrot = caffe.io.array_to_datum(np.reshape(im.squeeze(),[1,28,28]).astype(float), label)
+                                        #Storing unroted images
+                                        datum_unrot = caffe.io.array_to_datum(np.reshape(im.squeeze(),[1,28,28]).astype(float), label)
+                                        txn_unrot.put(str_id, datum_unrot.SerializeToString()) 
+                                        
+                                        #Storing unroted and corrupted images
+                                        datum_unrot_uncorr = caffe.io.array_to_datum(np.reshape(X_uncrot_uncorr.squeeze(),[1,28,28]).astype(float), label)
+                                        txn_unrot_corrupted.put(str_id, datum_unrot_uncorr.SerializeToString()) 
 
-                                    txn_unrot.put(str_id, datum_unrot.SerializeToString()) 
-                                    # Storing corrupted randints
-                                    txn_randint.put(str_id, str(randint)) 
-                                    count = count + 1
-                                    if int(self.batch_size*self.n_angles*idx + count)%10000==0:
-                                        print('Image Nr. %i created from %s'%(int(self.batch_size*self.n_angles*idx + count),self.dir_str))
-                        env_rot_ang.close()
+                                        # Storing corrupted randints
+                                        txn_randint.put(str_id, str(randint)) 
+                                        count = count + 1
+                                        if int(self.batch_size*self.n_angles*idx + count)%10000==0:
+                                            print('Image Nr. %i created from %s'%(int(self.batch_size*self.n_angles*idx + count),self.dir_str))
+                            env_rot_ang.close()
+                        env_unrot_corrupted.close()
                     env_unrot.close()
                 env_randint.close()
             env_rot.close()
@@ -198,7 +207,13 @@ class MNISTcorrupter(object):
         src_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_lmdb'
         dst_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'rot_lmdb/shuffled'
 
-        ind = self.create_shuffled_ind(src_dir, dst_dir)
+        if args:
+            import json
+            with open(params[0]) as data_file:    
+                ind = int(json.load(data_file))
+            ind = [int(i) for i in ind]
+        else:
+            ind = self.create_shuffled_ind(src_dir, dst_dir)
 
         self.shuffle_samples_lmdb(src_dir, dst_dir, ind)
 
@@ -210,6 +225,13 @@ class MNISTcorrupter(object):
         dst_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'unrot_lmdb/shuffled'
         self.shuffle_samples_lmdb(src_dir, dst_dir, ind)
 
+        src_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'uncorrupt_lmdb/'
+        dst_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'uncorrupt_lmdb/shuffled'
+        self.shuffle_samples_lmdb(src_dir, dst_dir, ind)
+        
+        src_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'corrupted_unrot_lmdb/'
+        dst_dir = self.dst_lmdb_dir + 'MNIST' + set_st + 'corrupted_unrot_lmdb/shuffled'
+        self.shuffle_samples_lmdb(src_dir, dst_dir, ind)
         
 if __name__ == '__main__':
     transformlmdb = MNISTtransformer()
