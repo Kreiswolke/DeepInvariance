@@ -13,17 +13,18 @@ class ActivityAnalyser(object):
         self.n = n
         self.dst_fpath = dst_fpath
         self.rot_lmdb_path = rot_lmdb_path
+        print('Initialization')
         
     def __call__(self):
         # Get activations, store if not available
         print('Activations')
         S = ReportInterface()
         try:
-            CL = S.__load_dict_from_hdf5__(self.dst_fpath)
+            CL = S.__load_dict_from_hdf5__(self.dst_fpath  + 'activity.hdf5')
         except IOError:
             store_layerwise_activations(self.net_prototxt, self.model, self.phase, self.keys, self.n, self.dst_fpath + 'activity.hdf5')
             print('Stores activations to {}'.format(self.dst_fpath))
-            CL = S.__load_dict_from_hdf5__(self.dst_fpath)
+            CL = S.__load_dict_from_hdf5__(self.dst_fpath +  + 'activity.hdf5')
             print('Stored and loaded activity')
         # Get rotation angles
         self.Rot, self.angs = self.get_rot_angles()
@@ -40,11 +41,14 @@ class ActivityAnalyser(object):
         # Get KL mean
         print('KL_mean')
         KL_clean, KL_mean = self.compute_KL_mean(KL)
-    
+        pickle.dump(open(self.dst_path + 'KL_clean.p','wb'), KL_clean)
+        pickle.dump(open(self.dst_path + 'KL_mean.p','wb'), KL_mean)
+
         # Get selectivity score
         print('Selectivity_score')
         s_score = self.compute_selectivity_score(KL_clean, KL_mean)
-                                                 
+        pickle.dump(open(self.dst_path + 's_score.p','wb'), s_score)
+                                 
         return s_score
             
         
