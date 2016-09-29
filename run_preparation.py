@@ -16,8 +16,6 @@ import matplotlib.pyplot as plt
 import math
 from nideep.eval.learning_curve import LearningCurve
 from nideep.eval.inference import infer_to_h5_fixed_dims, infer_to_lmdb
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
 from nideep.eval.learning_curve import LearningCurve
 from nideep.eval.eval_utils import Phase
 from utils import set_up_dir
@@ -26,13 +24,14 @@ from edit_prototxt import edit_prototxt, edit_solver
 
 #### FLAGS
 
-prep_autoencoder = False
+prep_autoencoder = True
 prep_MLP = True
 
 
 ##########
 
-date = '2008/'
+date = '2408/'
+snap = '390000'
 caffe_root = '/mnt/antares_raid/home/oliver/adhara/src/caffe/build/tools/caffe'
 lmdb_root = '/mnt/raid/dnn/data_oliver/'
 root =  "/mnt/antares_raid/home/oliver/Experiments/" + date
@@ -49,8 +48,8 @@ if prep_autoencoder:
                   'template_solver': "/mnt/antares_raid/home/oliver/Scripts/template_autoencoder_solver.prototxt",
                   'replacement_dict': 
                       { 
-                      'train_net': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TRAIN_60000_unrot_lmdb/shuffled/"),
-                      'test_net': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TEST_10000_unrot_lmdb/shuffled/" )
+                      'train_net': '"{}"'.format(lmdb_root + "lmdb/MNIST_TRAIN_60000_unrot_lmdb/shuffled/"),
+                      'test_net': '"{}"'.format(lmdb_root + "lmdb/MNIST_TEST_10000_unrot_lmdb/shuffled/" )
                       }
                   },
 
@@ -58,12 +57,34 @@ if prep_autoencoder:
                     'template_solver': "/mnt/antares_raid/home/oliver/Scripts/template_autoencoder_solver.prototxt",
                     'replacement_dict': 
                         { 
-                        'train_net': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TRAIN_60000_rot_lmdb/shuffled/"),
-                        'test_net': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TEST_10000_rot_lmdb/shuffled/" ),
-                        'train_net_out': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TRAIN_60000_unrot_lmdb/shuffled/"),
-                        'test_net_out': '"{}"'.format(lmdb_root + "/lmdb/MNIST_TEST_10000_unrot_lmdb/shuffled/") 
+                        'train_net': '"{}"'.format(lmdb_root + "lmdb/MNIST_TRAIN_60000_rot_lmdb/shuffled/"),
+                        'test_net': '"{}"'.format(lmdb_root + "lmdb/MNIST_TEST_10000_rot_lmdb/shuffled/" ),
+                        'train_net_out': '"{}"'.format(lmdb_root + "lmdb/MNIST_TRAIN_60000_unrot_lmdb/shuffled/"),
+                        'test_net_out': '"{}"'.format(lmdb_root + "lmdb/MNIST_TEST_10000_unrot_lmdb/shuffled/") 
                         }
                     },
+        
+            'N10NR':{'template_net': "/mnt/antares_raid/home/oliver/Scripts/template_AE_net_in_out.prototxt" , 
+                     'template_solver': "/mnt/antares_raid/home/oliver/Scripts/template_autoencoder_solver.prototxt",
+                     'replacement_dict':  
+                     {
+                    'train_net': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TRAIN_60000_corrupt_px_79_rot_lmdb/shuffled/"),
+                    'test_net': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TEST_10000_corrupt_px_79_rot_lmdb/shuffled/"),
+                    'train_net_out': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TRAIN_60000_corrupt_px_79_unrot_lmdb/shuffled/"),
+                    'test_net_out': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TEST_10000_corrupt_px_79_unrot_lmdb/shuffled/") 
+                }
+                    },
+
+            'N10NUR': {'template_net': "/mnt/antares_raid/home/oliver/Scripts/template_AE_net_in_out.prototxt" , 
+                       'template_solver': "/mnt/antares_raid/home/oliver/Scripts/template_autoencoder_solver.prototxt",
+                       'replacement_dict':  
+                       {
+                    'train_net': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TRAIN_60000_corrupt_px_79_unrot_corrupted_lmdb/shuffled/"),
+                    'test_net': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TEST_10000_corrupt_px_79_unrot_corrupted_lmdb/shuffled/" ),
+                    'train_net_out': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TRAIN_60000_corrupt_px_79_unrot_lmdb/shuffled/"),
+                    'test_net_out': '"{}"'.format(lmdb_root + "lmdb_corrupted_10/MNIST_TEST_10000_corrupt_px_79_unrot_lmdb/shuffled/") 
+                }
+                      },
 
              'N25NR':{'template_net': "/mnt/antares_raid/home/oliver/Scripts/template_AE_net_in_out.prototxt" , 
                       'template_solver': "/mnt/antares_raid/home/oliver/Scripts/template_autoencoder_solver.prototxt",
@@ -154,21 +175,22 @@ if prep_MLP:
     template_file_name_net = "/mnt/antares_raid/home/oliver/Scripts/template_MLP_net.prototxt"
     template_file_name_solver = "/mnt/antares_raid/home/oliver/Scripts/template_MLP_solver.prototxt"
     
-    date = '2008'
-    snap = '390000'
-    caffemodels =  ['/mnt/antares_raid/home/oliver/Experiments/{}/R/snapshots/_iter_{}.caffemodel'.format(date,snap),
-                    '/mnt/antares_raid/home/oliver/Experiments/{}/UR/snapshots/_iter_{}.caffemodel'.format(date,snap),
-                    '/mnt/antares_raid/home/oliver/Experiments/{}/N25NR/snapshots/_iter_{}.caffemodel'.format(date,snap),
-                    '/mnt/antares_raid/home/oliver/Experiments/{}/N25NUR/snapshots/_iter_{}.caffemodel'.format(date,snap),
-                    '/mnt/antares_raid/home/oliver/Experiments/{}/N50NR/snapshots/_iter_{}.caffemodel'.format(date,snap),
-                    '/mnt/antares_raid/home/oliver/Experiments/{}/N50NUR/snapshots/_iter_{}.caffemodel'.format(date,snap)
-                    ]
+
+#    caffemodels =  ['/mnt/antares_raid/home/oliver/Experiments/{}/R/snapshots/_iter_{}.caffemodel'.format(date,snap),
+#                    '/mnt/antares_raid/home/oliver/Experiments/{}/UR/snapshots/_iter_{}.caffemodel'.format(date,snap),
+#                    '/mnt/antares_raid/home/oliver/Experiments/{}/N25NR/snapshots/_iter_{}.caffemodel'.format(date,snap),
+#                    '/mnt/antares_raid/home/oliver/Experiments/{}/N25NUR/snapshots/_iter_{}.caffemodel'.format(date,snap),
+#                    '/mnt/antares_raid/home/oliver/Experiments/{}/N50NR/snapshots/_iter_{}.caffemodel'.format(date,snap),
+#                    '/mnt/antares_raid/home/oliver/Experiments/{}/N50NUR/snapshots/_iter_{}.caffemodel'.format(date,snap)
+#                    ]
     
     cases = {'AER': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/R/snapshots/_iter_{}.caffemodel'.format(date,snap)}, 
         'RAND': {'model': None}, 
         'AEUR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/UR/snapshots/_iter_{}.caffemodel'.format(date,snap)},
+        'AE10NR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/N10NR/snapshots/_iter_{}.caffemodel'.format(date,snap)}, 
         'AE25NR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/N25NR/snapshots/_iter_{}.caffemodel'.format(date,snap)}, 
         'AE50NR': {'model':  '/mnt/antares_raid/home/oliver/Experiments/{}/N50NR/snapshots/_iter_{}.caffemodel'.format(date,snap)},
+        'AE10NUR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/N10NUR/snapshots/_iter_{}.caffemodel'.format(date,snap)},
         'AE25NUR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/N25NUR/snapshots/_iter_{}.caffemodel'.format(date,snap)},
         'AE50NUR': {'model': '/mnt/antares_raid/home/oliver/Experiments/{}/N50NUR/snapshots/_iter_{}.caffemodel'.format(date,snap)},
         }
