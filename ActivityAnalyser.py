@@ -3,6 +3,7 @@ from utils import set_up_dir, ReportInterface
 import lmdb
 import scipy
 import cPickle as pickle
+import numpy as np
 
 class ActivityAnalyser(object):
     def __init__(self,net_prototxt, model, phase, keys, n, dst_fpath, rot_lmdb_path ):
@@ -24,7 +25,7 @@ class ActivityAnalyser(object):
         except IOError:
             store_layerwise_activations(self.net_prototxt, self.model, self.phase, self.keys, self.n, self.dst_fpath + 'activity.hdf5')
             print('Stores activations to {}'.format(self.dst_fpath))
-            CL = S.__load_dict_from_hdf5__(self.dst_fpath +  + 'activity.hdf5')
+            CL = S.__load_dict_from_hdf5__(self.dst_fpath + 'activity.hdf5')
             print('Stored and loaded activity')
         # Get rotation angles
         self.Rot, self.angs = self.get_rot_angles()
@@ -32,22 +33,22 @@ class ActivityAnalyser(object):
         # Get KL_anglewise
         print('KL_anglewise')
         try:
-            KL = pickle.load(open(self.dst_path + 'KL_anglewise.p','wb'))
+            KL = pickle.load(open(self.dst_fpath + 'KL_anglewise.p','r'))
         except IOError:
             print('Create KL_anglewise')
-            self.store_KL_anglewise()
-            KL = pickle.load(open(self.dst_path + 'KL_anglewise.p','wb'))
+            self.store_KL_anglewise(CL)
+            KL = pickle.load(open(self.dst_fpath + 'KL_anglewise.p','r'))
             print('Created KL_anglewise')
         # Get KL mean
         print('KL_mean')
         KL_clean, KL_mean = self.compute_KL_mean(KL)
-        pickle.dump(open(self.dst_path + 'KL_clean.p','wb'), KL_clean)
-        pickle.dump(open(self.dst_path + 'KL_mean.p','wb'), KL_mean)
+        pickle.dump(KL_clean, open(self.dst_fpath + 'KL_clean.p','wb'))
+        pickle.dump(KL_mean, open(self.dst_fpath + 'KL_mean.p','wb'))
 
         # Get selectivity score
         print('Selectivity_score')
         s_score = self.compute_selectivity_score(KL_clean, KL_mean)
-        pickle.dump(open(self.dst_path + 's_score.p','wb'), s_score)
+        pickle.dump(s_score, open(self.dst_fpath + 's_score.p','wb'))
                                  
         return s_score
             
@@ -65,15 +66,15 @@ class ActivityAnalyser(object):
         angs = np.sort(list(set(Rot)))
         return Rot, angs
                   
-    def store_KL_anglewise(self):
+    def store_KL_anglewise(self, CL, layer = 'encode1neuron'):
           KL = {l:[[] for n,_ in enumerate(CL[layer].T)] for l in self.keys}
           for l in self.keys:        
-              for neuron_nr, v in enumerate(CL[layer].T):
+              for neuron_nr, v in enumerate(CL[l].T):
                   for r in self.angs:
                       p, _ = np.histogram(v[self.Rot==r],bins = 100, density = True) # p = P(act/rot)
                       q, _ = np.histogram(v[self.Rot!=r],bins = 100, density = True) # q = P(act)
                       KL[l][neuron_nr].append(scipy.stats.entropy(p,q))
-          pickle.dump(open(self.dst_path + 'KL_anglewise.p','wb'), KL)
+          pickle.dump(KL, open(self.dst_fpath + 'KL_anglewise.p','wb'))
                   
                              
     def compute_KL_mean (self, KL):
@@ -93,7 +94,6 @@ class ActivityAnalyser(object):
 
 
             KL_mean[l] = np.mean(KL_clean[l], axis = 0)
-                             
         return KL_clean, KL_mean
                              
                      
